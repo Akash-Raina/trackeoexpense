@@ -1,0 +1,9 @@
+# Node.js
+node_modules/
+
+# Typescript
+dist/
+
+# dotenv
+.env
+
