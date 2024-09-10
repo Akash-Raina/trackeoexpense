@@ -1,6 +1,7 @@
 import { RequestHandler } from "express";
 import {z} from "zod";
 import { User } from "./db/db";
+import jwt  from "jsonwebtoken";
 
 const signupSchema = z.object({
     username: z.string(),
@@ -8,22 +9,18 @@ const signupSchema = z.object({
     email: z.string().email()
 })
 
-export const signupMiddleware:RequestHandler = (req, res, next)=>{
+export const signupMiddleware:RequestHandler = async(req, res, next)=>{
     const check = signupSchema.safeParse(req.body);
     if(!check){
         return res.status(400).json({
             msg:"incorrect inputs"
         })
     }
-    next();
-}
 
-export const userMiddleware:RequestHandler = async(req, res, next)=>{
-    const userauth = req.body;
-    const usercheck = await User.findOne({email: userauth.email});
-    if(usercheck){
-        return res.json({
-            msg: "user already exists"
+    const user = await User.findOne({email: req.body.email});
+    if(user){
+        return res.status(400).json({
+            msg: "User already exists"
         })
     }
     next();
@@ -34,21 +31,55 @@ const signinSchema = z.object({
     password: z.string()
 })
 
-export const signinMiddleware:RequestHandler = (req, res, next)=>{
+export const signinMiddleware:RequestHandler = async(req, res, next)=>{
     const success = signinSchema.safeParse(req.body);
     if(!success){
         return res.status(400).json({
             msg: "wrong parameters"
         })
     }
+
+    const found = await User.findOne({email:req.body.email});
+    if(!found){
+        return res.status(401).json({
+            msg: "No access"
+        })
+    }
     next();
 }
 
+interface jwtPayload{
+    userid: string
+}
+
+declare module 'express-serve-static-core' {
+    interface Request {
+      userId?: string;  // Add the custom property
+    }
+  }
+
+const expenseSchema = z.object({
+    amount: z.number(),
+    category: z.string(),
+    date: z.date(),
+    description: z.string()
+})
+
 export const authMiddleware:RequestHandler = async(req, res, next)=>{
-    const found = await User.findOne({username: req.body.username})
-    if(!found){
+    const token = req.headers.authorization;
+    if(!token || !token.startsWith('Bearer ')){
         return res.status(401).json({
-            msg: "un-authenticated User"
+            msg: "You dont have permission to access it"
+        })
+    }
+    const check = token.split(' ')[1];
+    try{
+        const decoded = jwt.verify(check, process.env.JWT_SECRET as string) as jwtPayload;
+        req.userId = decoded.userid;
+    }
+    catch(err){
+        return res.status(401).json({
+            msg: "No access"
         })
     }
     next();
