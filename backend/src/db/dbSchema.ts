@@ -31,6 +31,6 @@ export interface IRecurringExpense{
     user: mongoose.Types.ObjectId,
     amount: number;
     category:string;
-    frequency: number;
+    frequency: 'daily' | 'weekly' | 'monthly' | 'yearly';
     startDate: number;
 }

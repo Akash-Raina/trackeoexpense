@@ -11,38 +11,43 @@ const signupSchema = z.object({
 
 export const signupMiddleware:RequestHandler = async(req, res, next)=>{
     const check = signupSchema.safeParse(req.body);
-    if(!check){
+    if(!check.success){
         return res.status(400).json({
-            msg:"incorrect inputs"
+            msg:"Incorrect input values"
         })
     }
 
     const user = await User.findOne({email: req.body.email});
     if(user){
         return res.status(400).json({
-            msg: "User already exists"
+            msg: "Email already exists"
         })
     }
     next();
 }
 
 const signinSchema = z.object({
-    username: z.string(),
-    password: z.string()
+    email: z.string().email(),
+    password: z.string().min(5)
 })
 
 export const signinMiddleware:RequestHandler = async(req, res, next)=>{
     const success = signinSchema.safeParse(req.body);
-    if(!success){
+
+    if(!success.success){
         return res.status(400).json({
             msg: "wrong parameters"
         })
     }
-
     const found = await User.findOne({email:req.body.email});
     if(!found){
         return res.status(401).json({
-            msg: "No access"
+            msg: "No user found, Signup please"
+        })
+    }
+    if(found.password !== req.body.password){
+        return res.status(401).json({
+            msg: "Wrong Password"
         })
     }
     next();

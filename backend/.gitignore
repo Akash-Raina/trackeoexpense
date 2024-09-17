@@ -7,3 +7,5 @@ dist/
 # dotenv
 .env
 
+# TypeScript build information
+*.tsbuildinfo

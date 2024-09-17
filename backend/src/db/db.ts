@@ -1,6 +1,7 @@
 import mongoose from "mongoose";
 import dotenv from "dotenv"
 import { IBudget, IExpense, IIncome, IRecurringExpense, IUser } from "./dbSchema";
+import { string } from "zod";
 dotenv.config();
 mongoose.connect(process.env.DATABASE_URL as string);
 
@@ -37,7 +38,11 @@ const RecurringExpenseSchema = new mongoose.Schema({
     amount: {type: Number, required: true},
     category: {type: String, required: true},
     startDate: {type: Date, required: true},
-    frequency: {type: Date, required: true}
+    frequency: {
+        type: String,
+        enum: ['daily', 'weekly', 'monthly', 'yearly'],
+        required: true
+    }
 })
 
 export const User = mongoose.model<IUser>("User", UserSchema);

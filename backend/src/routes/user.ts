@@ -1,11 +1,9 @@
 import express, { json } from "express";
 import jwt from "jsonwebtoken";
 import dotenv from "dotenv";
-import z from "zod"
 import { authMiddleware, signinMiddleware, signupMiddleware } from "../middleware";
-import { Budget, Expense, RecurringExpense, User } from "../db/db";
+import { Budget, Expense, Income, RecurringExpense, User } from "../db/db";
 import mongoSanitize from "mongo-sanitize"
-import { mongo } from "mongoose";
 dotenv.config();
 
 export const route = express.Router();
@@ -50,7 +48,7 @@ route.post("/signin",signinMiddleware, async(req, res)=>{
     catch(err){
         return res.status(500).json({
             error:{
-                msg: err
+                msg: "unknow error"
             }
         })
     }
@@ -68,9 +66,9 @@ route.post("/expense", authMiddleware, async(req, res)=>{
             date: body.date,
             description: body.description
         })
-    res.status(200).json({
-        msg: "Expense created successfully"
-    })
+        res.status(200).json({
+            msg: "Expense created successfully"
+        })
     }
     catch(err){
         return res.status(500).json({
@@ -81,6 +79,7 @@ route.post("/expense", authMiddleware, async(req, res)=>{
 
 route.post("/budget", authMiddleware, async(req, res)=>{
     try{
+        console.log(req.body)
         const body = mongoSanitize(req.body);
         const data = await Budget.create({
             user: req.userId,
@@ -102,7 +101,7 @@ route.post("/budget", authMiddleware, async(req, res)=>{
 route.post("/income", authMiddleware, async(req,res)=>{
     try{
         const body = mongoSanitize(req.body);
-        const data = await Budget.create({
+        const data = await Income.create({
             user: req.userId,
             amount: body.amount,
             source: body.source,
@@ -129,7 +128,7 @@ route.post("/reexpense", authMiddleware, async(req, res)=>{
             startDate: body.startDate,
             frequency: body.frequency
         })
-        return res.status(500).json({
+        return res.status(200).json({
             msg: "recurring expense has been added"
         })
     }
